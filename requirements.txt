@@ -1,0 +1,11 @@
+alembic
+colorama
+google-api-python-client
+grpcio-tools
+googleapis-common-protos
+jupyter
+keyring
+pandas
+psycopg2-binary
+sqlalchemy
+structlog
