@@ -1,5 +1,8 @@
 import time
 
+from grpc._channel import _Rendezvous
+
+from lnd_sql.logger import log
 from lnd_sql.scripts.upsert_forwarding_events import UpsertForwardingEvents
 from lnd_sql.scripts.upsert_open_channels import UpsertOpenChannels
 
@@ -46,11 +49,14 @@ if __name__ == '__main__':
     )
 
     while True:
-        UpsertOpenChannels(
-            tls_cert_path=args.tls,
-            lnd_grpc_host=args.host,
-            lnd_grpc_port=args.port,
-            macaroon_path=args.macaroon
-        )
-        fwd_events.upsert_all()
-        time.sleep(60)
+        try:
+            UpsertOpenChannels(
+                tls_cert_path=args.tls,
+                lnd_grpc_host=args.host,
+                lnd_grpc_port=args.port,
+                macaroon_path=args.macaroon
+            )
+            fwd_events.upsert_all()
+        except _Rendezvous:
+            log.error('polling error', exc_info=True)
+        time.sleep(1)
