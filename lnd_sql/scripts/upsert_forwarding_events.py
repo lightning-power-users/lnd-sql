@@ -2,6 +2,7 @@ from datetime import datetime
 
 # noinspection PyPackageRequirements
 from google.protobuf.json_format import MessageToDict
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.elements import and_
 
@@ -28,23 +29,38 @@ class UpsertForwardingEvents(object):
             grpc_host=lnd_grpc_host,
             grpc_port=lnd_grpc_port,
         )
-        self.index_offset = None
         self.info: GetInfoResponse = self.rpc.get_info()
+
+    @staticmethod
+    def get_index_offset() -> int:
+        with session_scope() as session:
+            try:
+                record = (
+                    session
+                    .query(func.max(ForwardingEvents.last_offset_index))
+                    .one()
+                )
+                return record
+            except NoResultFound:
+                return 0
 
     def upsert_all(self):
         forwarding_events = self.rpc.forwarding_history(
             start_time=1,
             end_time=int(datetime.now().timestamp()),
             num_max_events=10000,
-            index_offset=self.index_offset
+            index_offset=self.get_index_offset()
         )
         log.debug(
             'forwarding_events',
             last_offset_index=forwarding_events.last_offset_index
         )
-        self.index_offset = forwarding_events.last_offset_index
         forwarding_event_dicts = [MessageToDict(c)
                                   for c in forwarding_events.forwarding_events]
+        for item in forwarding_event_dicts:
+            item.update(
+                {'last_offset_index': forwarding_events.last_offset_index}
+            )
         for forwarding_event_dict in forwarding_event_dicts:
             self.upsert(self.info.identity_pubkey, forwarding_event_dict)
 
