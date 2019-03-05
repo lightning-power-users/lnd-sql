@@ -41,12 +41,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    fwd_events = UpsertForwardingEvents(
-        tls_cert_path=args.tls,
-        lnd_grpc_host=args.host,
-        lnd_grpc_port=args.port,
-        macaroon_path=args.macaroon
-    )
 
     while True:
         try:
@@ -56,7 +50,13 @@ if __name__ == '__main__':
                 lnd_grpc_port=args.port,
                 macaroon_path=args.macaroon
             )
-            fwd_events.upsert_all()
+
+            fwd_events = UpsertForwardingEvents(
+                tls_cert_path=args.tls,
+                lnd_grpc_host=args.host,
+                lnd_grpc_port=args.port,
+                macaroon_path=args.macaroon
+            )
         except _Rendezvous:
             log.error('polling error', exc_info=True)
         time.sleep(1)

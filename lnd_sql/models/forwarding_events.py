@@ -34,6 +34,7 @@ class ForwardingEvents(Base):
     amt_out = Column(BIGINT)
     fee = Column(BIGINT)
     fee_msat = Column(BIGINT)
+    last_offset_index = Column(BIGINT)
 
 
 if __name__ == '__main__':
