@@ -1,12 +1,14 @@
+import csv
+from io import StringIO
+
 # noinspection PyPackageRequirements
 from google.protobuf.json_format import MessageToDict
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.elements import and_
+import postgres_copy
 
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.database.session import session_scope
-from lnd_sql.models.etl.open_channels import OpenChannels
+from lnd_sql.models.etl.etl_open_channels import ETLOpenChannels
 
 
 class UpsertOpenChannels(object):
@@ -28,27 +30,21 @@ class UpsertOpenChannels(object):
 
         channels = self.rpc.list_channels()
         info: GetInfoResponse = self.rpc.get_info()
+
+        csv_file = StringIO()
+        writer = csv.DictWriter(csv_file,
+                                fieldnames=ETLOpenChannels.csv_columns)
         channel_dicts = [MessageToDict(c) for c in channels]
         for channel_dict in channel_dicts:
-            self.upsert(info.identity_pubkey, channel_dict)
-
-    @staticmethod
-    def upsert(local_pubkey, data: dict):
+            channel_dict['local_pubkey'] = info.identity_pubkey
+            channel_dict.pop('pending_htlcs', None)
+            writer.writerow(channel_dict)
+        ETLOpenChannels.truncate()
+        flags = {'format': 'csv', 'header': False}
         with session_scope() as session:
-            try:
-                record = (
-                    session
-                        .query(OpenChannels)
-                        .filter(and_(OpenChannels.local_pubkey == local_pubkey,
-                                     OpenChannels.chan_id == data['chan_id'])
-                                )
-                        .one()
-                )
-            except NoResultFound:
-                record = OpenChannels()
-                record.local_pubkey = local_pubkey
-                record.chan_id = data['chan_id']
-                session.add(record)
-
-            for key, value in data.items():
-                setattr(record, key, value)
+            csv_file.seek(0)
+            postgres_copy.copy_from(csv_file,
+                                    ETLOpenChannels,
+                                    session.connection(),
+                                    ETLOpenChannels.csv_columns,
+                                    **flags)

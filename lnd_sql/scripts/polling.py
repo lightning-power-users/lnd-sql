@@ -42,21 +42,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    while True:
-        try:
-            UpsertOpenChannels(
-                tls_cert_path=args.tls,
-                lnd_grpc_host=args.host,
-                lnd_grpc_port=args.port,
-                macaroon_path=args.macaroon
-            )
+    # while True:
+    try:
+        UpsertOpenChannels(
+            tls_cert_path=args.tls,
+            lnd_grpc_host=args.host,
+            lnd_grpc_port=args.port,
+            macaroon_path=args.macaroon
+        )
 
-            fwd_events = UpsertForwardingEvents(
-                tls_cert_path=args.tls,
-                lnd_grpc_host=args.host,
-                lnd_grpc_port=args.port,
-                macaroon_path=args.macaroon
-            )
-        except _Rendezvous:
-            log.error('polling error', exc_info=True)
-        time.sleep(1)
+        # fwd_events = UpsertForwardingEvents(
+        #     tls_cert_path=args.tls,
+        #     lnd_grpc_host=args.host,
+        #     lnd_grpc_port=args.port,
+        #     macaroon_path=args.macaroon
+        # )
+    except _Rendezvous:
+        log.error('polling error', exc_info=True)
+        # time.sleep(1)
