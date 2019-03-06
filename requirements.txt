@@ -8,4 +8,5 @@ keyring
 pandas
 psycopg2-binary
 sqlalchemy
+sqlalchemy-postgres-copy
 structlog

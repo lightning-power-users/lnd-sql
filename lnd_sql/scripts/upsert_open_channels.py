@@ -6,7 +6,7 @@ from sqlalchemy.sql.elements import and_
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.database.session import session_scope
-from lnd_sql.models.open_channels import OpenChannels
+from lnd_sql.models.etl.open_channels import OpenChannels
 
 
 class UpsertOpenChannels(object):
