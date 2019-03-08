@@ -42,3 +42,5 @@ class OpenChannels(Base):
     total_satoshis_received = Column(BIGINT)
     num_updates = Column(BIGINT)
     csv_delay = Column(BIGINT)
+    private = Column(Boolean)
+    unsettled_balance = Column(BIGINT)
