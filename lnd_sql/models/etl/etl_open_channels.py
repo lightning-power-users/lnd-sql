@@ -40,3 +40,90 @@ class ETLOpenChannels(Base):
             session.execute("""
                     TRUNCATE etl_open_channels;
                     """)
+
+    @classmethod
+    def load(cls):
+        # Insert any missing peers to avoid having a foreign key missing
+        with session_scope() as session:
+            session.execute("""
+            INSERT INTO peers (pubkey) 
+            SELECT DISTINCT remote_pubkey
+              FROM etl_open_channels
+              LEFT OUTER JOIN peers
+                ON etl_open_channels.remote_pubkey = peers.pubkey
+              WHERE peers.pubkey IS NULL
+            UNION
+            SELECT DISTINCT local_pubkey
+            FROM etl_open_channels
+              LEFT OUTER JOIN peers
+                ON etl_open_channels.local_pubkey = peers.pubkey
+              WHERE peers.pubkey IS NULL;
+            """)
+
+        with session_scope() as session:
+            session.execute("""
+        UPDATE open_channels
+        SET
+          active                  = etl_open_channels.active,
+          capacity                = etl_open_channels.capacity,
+          commit_fee              = etl_open_channels.commit_fee,
+          commit_weight           = etl_open_channels.commit_weight,
+          csv_delay               = etl_open_channels.csv_delay,
+          fee_per_kw              = etl_open_channels.fee_per_kw,
+          local_balance           = etl_open_channels.local_balance,
+          num_updates             = etl_open_channels.num_updates,
+          private                 = etl_open_channels.private,
+          remote_balance          = etl_open_channels.remote_balance,
+          total_satoshis_received = etl_open_channels.total_satoshis_received,
+          total_satoshis_sent     = etl_open_channels.total_satoshis_sent,
+          unsettled_balance       = etl_open_channels.unsettled_balance
+        FROM etl_open_channels
+        WHERE etl_open_channels.chan_id = open_channels.chan_id
+          AND etl_open_channels.local_pubkey = open_channels.local_pubkey;
+            """)
+
+        with session_scope() as session:
+            session.execute("""
+            INSERT INTO open_channels (
+                  active,
+                  capacity,
+                  chan_id,
+                  channel_point,
+                  commit_fee,
+                  commit_weight,
+                  csv_delay,
+                  fee_per_kw,
+                  local_balance,
+                  local_pubkey,
+                  num_updates,
+                  private,
+                  remote_balance,
+                  remote_pubkey,
+                  total_satoshis_received,
+                  total_satoshis_sent,
+                  unsettled_balance
+                  )
+                  SELECT
+                      eoc.active,
+                      eoc.capacity,
+                      eoc.chan_id,
+                      eoc.channel_point,
+                      eoc.commit_fee,
+                      eoc.commit_weight,
+                      eoc.csv_delay,
+                      eoc.fee_per_kw,
+                      eoc.local_balance,
+                      eoc.local_pubkey,
+                      eoc.num_updates,
+                      eoc.private,
+                      eoc.remote_balance,
+                      eoc.remote_pubkey,
+                      eoc.total_satoshis_received,
+                      eoc.total_satoshis_sent,
+                      eoc.unsettled_balance
+                  FROM etl_open_channels eoc
+                    LEFT OUTER JOIN open_channels
+                      ON eoc.chan_id = open_channels.chan_id
+                      and eoc.local_pubkey = open_channels.local_pubkey
+                  WHERE open_channels.id IS NULL;
+            """)

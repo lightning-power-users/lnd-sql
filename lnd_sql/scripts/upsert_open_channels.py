@@ -48,3 +48,5 @@ class UpsertOpenChannels(object):
                                     session.connection(),
                                     ETLOpenChannels.csv_columns,
                                     **flags)
+        ETLOpenChannels.load()
+        ETLOpenChannels.truncate()
