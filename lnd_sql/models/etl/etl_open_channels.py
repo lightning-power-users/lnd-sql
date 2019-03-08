@@ -127,3 +127,11 @@ class ETLOpenChannels(Base):
                       and eoc.local_pubkey = open_channels.local_pubkey
                   WHERE open_channels.id IS NULL;
             """)
+
+        with session_scope() as session:
+            session.execute("""
+                DELETE FROM open_channels 
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM etl_open_channels 
+                    WHERE etl_open_channels.chan_id = open_channels.chan_id);
+                """)
