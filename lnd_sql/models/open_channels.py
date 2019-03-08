@@ -4,10 +4,11 @@ from sqlalchemy import (
     Column,
     DateTime,
     func,
-    String
-)
+    String,
+    ForeignKey)
 
 from lnd_sql.database.base import Base
+from lnd_sql.models.peers import Peers
 
 
 class OpenChannels(Base):
@@ -29,8 +30,8 @@ class OpenChannels(Base):
 
     chan_id = Column(BIGINT)
     active = Column(Boolean)
-    local_pubkey = Column(String)
-    remote_pubkey = Column(String)
+    local_pubkey = Column(String, ForeignKey(Peers.pubkey))
+    remote_pubkey = Column(String, ForeignKey(Peers.pubkey))
     channel_point = Column(String)
     capacity = Column(BIGINT)
     local_balance = Column(BIGINT)
