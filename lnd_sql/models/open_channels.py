@@ -1,13 +1,12 @@
 from sqlalchemy import (
     BIGINT,
+    Boolean,
     Column,
     DateTime,
     func,
-    String,
-    Boolean)
-from sqlalchemy.orm import Session
+    String
+)
 
-from lnd_sql.database.session import session_scope
 from lnd_sql.database.base import Base
 
 
@@ -40,11 +39,6 @@ class OpenChannels(Base):
     commit_weight = Column(BIGINT)
     fee_per_kw = Column(BIGINT)
     total_satoshis_sent = Column(BIGINT)
+    total_satoshis_received = Column(BIGINT)
     num_updates = Column(BIGINT)
     csv_delay = Column(BIGINT)
-
-
-if __name__ == '__main__':
-    session: Session = None
-    with session_scope() as session:
-        Base.metadata.create_all(session.get_bind())
