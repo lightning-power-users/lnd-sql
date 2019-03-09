@@ -26,8 +26,8 @@ class InboundCapacityRequest(Base):
     id = Column(Integer, primary_key=True)
 
     session_id = Column(String)
-    pubkey = Column(String)
-    host = Column(String)
+    remote_pubkey = Column(String)
+    remote_host = Column(String)
 
     capacity = Column(BIGINT)
     # As percentage of capacity
