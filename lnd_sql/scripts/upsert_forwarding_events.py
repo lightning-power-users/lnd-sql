@@ -10,7 +10,7 @@ from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.database.session import session_scope
 from lnd_sql.logger import log
-from lnd_sql.models.forwarding_events import ForwardingEvents
+from lnd_sql.models.lnd import ForwardingEvents
 
 
 class UpsertForwardingEvents(object):

@@ -8,7 +8,7 @@ from sqlalchemy import (
     ForeignKey)
 
 from lnd_sql.database.base import Base
-from lnd_sql.models.peers import Peers
+from lnd_sql.models.lnd.peers import Peers
 
 
 class OpenChannels(Base):

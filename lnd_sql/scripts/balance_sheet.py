@@ -1,7 +1,7 @@
 from sqlalchemy import func
 
 from lnd_sql.database.session import session_scope
-from lnd_sql.models.etl.open_channels import OpenChannels
+from lnd_sql.models import OpenChannels
 from lnd_sql.logger import log
 
 

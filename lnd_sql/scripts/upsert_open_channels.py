@@ -8,7 +8,7 @@ import postgres_copy
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.database.session import session_scope
-from lnd_sql.models.etl.etl_open_channels import ETLOpenChannels
+from lnd_sql.models.lnd import ETLOpenChannels
 
 
 class UpsertOpenChannels(object):
