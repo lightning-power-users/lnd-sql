@@ -4,6 +4,7 @@ from grpc._channel import _Rendezvous
 
 from lnd_sql.logger import log
 from lnd_sql.scripts.upsert_forwarding_events import UpsertForwardingEvents
+from lnd_sql.scripts.upsert_invoices import UpsertInvoices
 from lnd_sql.scripts.upsert_open_channels import UpsertOpenChannels
 
 import argparse
@@ -43,7 +44,15 @@ if __name__ == '__main__':
 
     while True:
         try:
-            UpsertOpenChannels(
+            # UpsertOpenChannels(
+            #     tls_cert_path=args.tls,
+            #     lnd_grpc_host=args.host,
+            #     lnd_grpc_port=args.port,
+            #     macaroon_path=args.macaroon
+            # )
+            # log.debug('polling update')
+
+            UpsertInvoices(
                 tls_cert_path=args.tls,
                 lnd_grpc_host=args.host,
                 lnd_grpc_port=args.port,
