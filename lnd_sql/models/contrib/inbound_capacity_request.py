@@ -1,11 +1,16 @@
 from sqlalchemy import (
+    BIGINT,
     Column,
     DateTime,
+    ForeignKey,
     func,
     Integer,
-    String, BIGINT, Numeric)
+    Numeric,
+    String
+)
 
 from lnd_sql.database.base import Base
+from lnd_sql.models.lnd.invoices import Invoices
 
 
 class InboundCapacityRequest(Base):
@@ -25,6 +30,8 @@ class InboundCapacityRequest(Base):
 
     id = Column(Integer, primary_key=True)
 
+    invoice_r_hash = Column(String, ForeignKey(Invoices.r_hash))
+
     session_id = Column(String)
     remote_pubkey = Column(String)
     remote_host = Column(String)
@@ -38,6 +45,3 @@ class InboundCapacityRequest(Base):
     expected_bytes = Column(BIGINT)
     transaction_fee = Column(BIGINT)
     total_fee = Column(BIGINT)
-
-    invoice_r_hash = Column(String)
-    payment_request = Column(String)
