@@ -13,6 +13,8 @@ class Invoices(Base):
     __tablename__ = 'invoices'
 
     r_hash = Column(String, primary_key=True)
+    last_index_offset = Column(BIGINT)
+    local_pubkey = Column(String)
     memo = Column(String)
     r_preimage = Column(String)
     value = Column(BIGINT)
@@ -28,7 +30,4 @@ class Invoices(Base):
     private = Column(Boolean)
     add_index = Column(BIGINT)
     settle_index = Column(BIGINT)
-    amt_paid = Column(BIGINT)
     amt_paid_sat = Column(BIGINT)
-    amt_paid_msat = Column(BIGINT)
-    invoice_state = Column(String)

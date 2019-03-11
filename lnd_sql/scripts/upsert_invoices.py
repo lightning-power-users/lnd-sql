@@ -5,10 +5,14 @@ from io import StringIO
 # noinspection PyPackageRequirements
 from google.protobuf.json_format import MessageToDict
 import postgres_copy
+import pytz
+from sqlalchemy import func
+from sqlalchemy.orm.exc import NoResultFound
 
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse, ListInvoiceResponse
 from lnd_sql.database.session import session_scope
+from lnd_sql.models import Invoices
 from lnd_sql.models.lnd.etl.etl_invoices import ETLInvoices
 
 
@@ -29,25 +33,43 @@ class UpsertInvoices(object):
             grpc_port=lnd_grpc_port,
         )
 
-        invoices: ListInvoiceResponse = self.rpc.list_invoices()
-        info: GetInfoResponse = self.rpc.get_info()
+        self.info: GetInfoResponse = self.rpc.get_info()
 
+    @staticmethod
+    def get_index_offset() -> int:
+        with session_scope() as session:
+            record = (
+                session
+                    .query(func.max(Invoices.last_index_offset)).scalar()
+            )
+            return record
+
+    def upsert_all(self):
+        invoices: ListInvoiceResponse = self.rpc.list_invoices(
+            num_max_invoices=100000,
+            index_offset=self.get_index_offset()
+        )
         csv_file = StringIO()
         writer = csv.DictWriter(csv_file,
                                 fieldnames=ETLInvoices.csv_columns)
         for invoice in invoices.invoices:
             invoice_dict = MessageToDict(invoice)
-            invoice_dict['local_pubkey'] = info.identity_pubkey
+            invoice_dict['last_index_offset'] = invoices.last_index_offset
+            invoice_dict['local_pubkey'] = self.info.identity_pubkey
             invoice_dict['r_preimage'] = invoice.r_preimage.hex()
             invoice_dict['r_hash'] = invoice.r_hash.hex()
             invoice_dict['description_hash'] = invoice.description_hash.hex()
-            invoice_dict['creation_date'] = datetime.utcfromtimestamp(invoice.creation_date)
+            invoice_dict['creation_date'] = datetime.utcfromtimestamp(
+                invoice.creation_date).replace(tzinfo=pytz.utc)
             if invoice.settle_date:
-                invoice_dict['settle_date'] = datetime.utcfromtimestamp(invoice.settle_date)
+                invoice_dict['settle_date'] = datetime.utcfromtimestamp(
+                    invoice.settle_date).replace(tzinfo=pytz.utc)
             else:
                 invoice_dict['settle_date'] = None
             invoice_dict.pop('receipt', None)
             invoice_dict.pop('route_hints', None)
+            invoice_dict.pop('amt_paid', None)
+            invoice_dict.pop('amt_paid_msat', None)
             writer.writerow(invoice_dict)
         ETLInvoices.truncate()
         flags = {'format': 'csv', 'header': False}

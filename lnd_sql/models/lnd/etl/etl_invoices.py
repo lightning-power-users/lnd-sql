@@ -1,4 +1,4 @@
-from sqlalchemy import BIGINT, Boolean, Column, String
+from sqlalchemy import BIGINT, Boolean, Column, String, DateTime
 
 from lnd_sql import session_scope
 from lnd_sql.database.base import Base
@@ -7,38 +7,39 @@ from lnd_sql.database.base import Base
 class ETLInvoices(Base):
     __tablename__ = 'etl_invoices'
 
-    csv_columns = ('chan_id', 'active', 'local_pubkey',
-                   'remote_pubkey', 'channel_point',
-                   'capacity', 'local_balance', 'remote_balance',
-                   'commit_fee', 'commit_weight', 'fee_per_kw',
-                   'total_satoshis_sent', 'total_satoshis_received',
-                   'num_updates', 'csv_delay', 'private', 'unsettled_balance')
+    csv_columns = (
+        'memo', 'r_preimage', 'r_hash', 'value', 'creation_date',
+        'payment_request', 'expiry', 'cltv_expiry', 'add_index', 'local_pubkey',
+        'description_hash', 'settle_date', 'settled', 'amt_paid_sat',
+        'settle_index', 'private', 'last_index_offset')
 
     id = Column(BIGINT, primary_key=True)
 
-    chan_id = Column(BIGINT)
-    active = Column(Boolean)
     local_pubkey = Column(String)
-    remote_pubkey = Column(String)
-    channel_point = Column(String)
-    capacity = Column(BIGINT)
-    local_balance = Column(BIGINT)
-    remote_balance = Column(BIGINT)
-    commit_fee = Column(BIGINT)
-    commit_weight = Column(BIGINT)
-    fee_per_kw = Column(BIGINT)
-    total_satoshis_sent = Column(BIGINT)
-    total_satoshis_received = Column(BIGINT)
-    num_updates = Column(BIGINT)
-    csv_delay = Column(BIGINT)
-    unsettled_balance = Column(BIGINT)
+    r_hash = Column(String)
+    memo = Column(String)
+    r_preimage = Column(String)
+    value = Column(BIGINT)
+    settled = Column(Boolean)
+    creation_date = Column(DateTime(timezone=True))
+    settle_date = Column(DateTime(timezone=True))
+    payment_request = Column(String)
+    description_hash = Column(String)
+    description = Column(String)
+    expiry = Column(BIGINT)
+    fallback_addr = Column(String)
+    cltv_expiry = Column(BIGINT)
     private = Column(Boolean)
+    add_index = Column(BIGINT)
+    settle_index = Column(BIGINT)
+    amt_paid_sat = Column(BIGINT)
+    last_index_offset = Column(BIGINT)
 
     @classmethod
     def truncate(cls):
         with session_scope() as session:
             session.execute("""
-                    TRUNCATE etl_open_channels;
+                    TRUNCATE etl_invoices;
                     """)
 
     @classmethod
@@ -47,91 +48,80 @@ class ETLInvoices(Base):
         with session_scope() as session:
             session.execute("""
             INSERT INTO peers (pubkey) 
-            SELECT DISTINCT remote_pubkey
-              FROM etl_open_channels
-              LEFT OUTER JOIN peers
-                ON etl_open_channels.remote_pubkey = peers.pubkey
-              WHERE peers.pubkey IS NULL
-            UNION
             SELECT DISTINCT local_pubkey
-            FROM etl_open_channels
+            FROM etl_invoices
               LEFT OUTER JOIN peers
-                ON etl_open_channels.local_pubkey = peers.pubkey
+                ON etl_invoices.local_pubkey = peers.pubkey
               WHERE peers.pubkey IS NULL;
             """)
 
         with session_scope() as session:
             session.execute("""
-        UPDATE open_channels
+        UPDATE invoices
         SET
-          active                  = etl_open_channels.active,
-          capacity                = etl_open_channels.capacity,
-          commit_fee              = etl_open_channels.commit_fee,
-          commit_weight           = etl_open_channels.commit_weight,
-          csv_delay               = etl_open_channels.csv_delay,
-          fee_per_kw              = etl_open_channels.fee_per_kw,
-          local_balance           = etl_open_channels.local_balance,
-          num_updates             = etl_open_channels.num_updates,
-          private                 = etl_open_channels.private,
-          remote_balance          = etl_open_channels.remote_balance,
-          total_satoshis_received = etl_open_channels.total_satoshis_received,
-          total_satoshis_sent     = etl_open_channels.total_satoshis_sent,
-          unsettled_balance       = etl_open_channels.unsettled_balance
-        FROM etl_open_channels
-        WHERE etl_open_channels.chan_id = open_channels.chan_id
-          AND etl_open_channels.local_pubkey = open_channels.local_pubkey;
+          add_index        = etl_invoices.add_index,
+          amt_paid_sat     = etl_invoices.amt_paid_sat,
+          cltv_expiry      = etl_invoices.cltv_expiry,
+          creation_date    = etl_invoices.creation_date,
+          description_hash = etl_invoices.description_hash,
+          expiry           = etl_invoices.expiry,
+          fallback_addr    = etl_invoices.fallback_addr,
+          local_pubkey     = etl_invoices.local_pubkey,
+          memo             = etl_invoices.memo,
+          payment_request  = etl_invoices.payment_request,
+          private          = etl_invoices.private,
+          r_preimage       = etl_invoices.r_preimage,
+          settle_date      = etl_invoices.settle_date,
+          settle_index     = etl_invoices.settle_index,
+          settled          = etl_invoices.settled,
+          value            = etl_invoices.value
+        FROM etl_invoices
+        WHERE etl_invoices.r_hash = invoices.r_hash;
             """)
 
         with session_scope() as session:
             session.execute("""
-            INSERT INTO open_channels (
-                  active,
-                  capacity,
-                  chan_id,
-                  channel_point,
-                  commit_fee,
-                  commit_weight,
-                  csv_delay,
-                  fee_per_kw,
-                  local_balance,
-                  local_pubkey,
-                  num_updates,
+            INSERT INTO invoices (
+                  r_hash,
+                  memo,
+                  r_preimage,
+                  value,
+                  settled,
+                  creation_date,
+                  settle_date,
+                  payment_request,
+                  description_hash,
+                  description,
+                  expiry,
+                  fallback_addr,
+                  cltv_expiry,
                   private,
-                  remote_balance,
-                  remote_pubkey,
-                  total_satoshis_received,
-                  total_satoshis_sent,
-                  unsettled_balance
+                  add_index,
+                  settle_index,
+                  amt_paid_sat,
+                  local_pubkey
                   )
                   SELECT
-                      eoc.active,
-                      eoc.capacity,
-                      eoc.chan_id,
-                      eoc.channel_point,
-                      eoc.commit_fee,
-                      eoc.commit_weight,
-                      eoc.csv_delay,
-                      eoc.fee_per_kw,
-                      eoc.local_balance,
-                      eoc.local_pubkey,
-                      eoc.num_updates,
-                      eoc.private,
-                      eoc.remote_balance,
-                      eoc.remote_pubkey,
-                      eoc.total_satoshis_received,
-                      eoc.total_satoshis_sent,
-                      eoc.unsettled_balance
-                  FROM etl_open_channels eoc
-                    LEFT OUTER JOIN open_channels
-                      ON eoc.chan_id = open_channels.chan_id
-                      and eoc.local_pubkey = open_channels.local_pubkey
-                  WHERE open_channels.id IS NULL;
+                      ei.r_hash,
+                      ei.memo,
+                      ei.r_preimage,
+                      ei.value,
+                      ei.settled,
+                      ei.creation_date,
+                      ei.settle_date,
+                      ei.payment_request,
+                      ei.description_hash,
+                      ei.description,
+                      ei.expiry,
+                      ei.fallback_addr,
+                      ei.cltv_expiry,
+                      ei.private,
+                      ei.add_index,
+                      ei.settle_index,
+                      ei.amt_paid_sat,
+                      ei.local_pubkey
+                  FROM etl_invoices ei
+                    LEFT OUTER JOIN invoices
+                      ON ei.r_hash = invoices.r_hash
+                  WHERE invoices.r_hash IS NULL;
             """)
-
-        with session_scope() as session:
-            session.execute("""
-                DELETE FROM open_channels 
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM etl_open_channels 
-                    WHERE etl_open_channels.chan_id = open_channels.chan_id);
-                """)

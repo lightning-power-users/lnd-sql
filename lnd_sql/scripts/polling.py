@@ -57,7 +57,7 @@ if __name__ == '__main__':
                 lnd_grpc_host=args.host,
                 lnd_grpc_port=args.port,
                 macaroon_path=args.macaroon
-            )
+            ).upsert_all()
             log.debug('polling update')
 
             # fwd_events = UpsertForwardingEvents(

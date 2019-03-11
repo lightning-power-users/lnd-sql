@@ -1,4 +1,5 @@
 from .contrib.inbound_capacity_request import InboundCapacityRequest
+from .lnd.etl.etl_invoices import ETLInvoices
 from .lnd.etl.etl_open_channels import ETLOpenChannels
 from .lnd.balances import Balances
 from .lnd.forwarding_events import ForwardingEvents
