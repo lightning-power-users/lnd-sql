@@ -7,7 +7,6 @@ from google.protobuf.json_format import MessageToDict
 import postgres_copy
 import pytz
 from sqlalchemy import func
-from sqlalchemy.orm.exc import NoResultFound
 
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse, ListInvoiceResponse
@@ -49,12 +48,16 @@ class UpsertInvoices(object):
             num_max_invoices=100000,
             index_offset=self.get_index_offset()
         )
+        self.upsert(invoice_list=invoices.invoices,
+                    last_index_offset=invoices.last_index_offset)
+
+    def upsert(self, invoice_list, last_index_offset=None):
         csv_file = StringIO()
         writer = csv.DictWriter(csv_file,
                                 fieldnames=ETLInvoices.csv_columns)
-        for invoice in invoices.invoices:
+        for invoice in invoice_list:
             invoice_dict = MessageToDict(invoice)
-            invoice_dict['last_index_offset'] = invoices.last_index_offset
+            invoice_dict['last_index_offset'] = last_index_offset
             invoice_dict['local_pubkey'] = self.info.identity_pubkey
             invoice_dict['r_preimage'] = invoice.r_preimage.hex()
             invoice_dict['r_hash'] = invoice.r_hash.hex()
