@@ -74,7 +74,8 @@ class ETLInvoices(Base):
           settle_date      = etl_invoices.settle_date,
           settle_index     = etl_invoices.settle_index,
           settled          = etl_invoices.settled,
-          value            = etl_invoices.value
+          value            = etl_invoices.value,
+          last_index_offset = etl_invoices.last_index_offset
         FROM etl_invoices
         WHERE etl_invoices.r_hash = invoices.r_hash;
             """)
@@ -99,7 +100,8 @@ class ETLInvoices(Base):
                   add_index,
                   settle_index,
                   amt_paid_sat,
-                  local_pubkey
+                  local_pubkey,
+                  last_index_offset
                   )
                   SELECT
                       ei.r_hash,
@@ -119,7 +121,8 @@ class ETLInvoices(Base):
                       ei.add_index,
                       ei.settle_index,
                       ei.amt_paid_sat,
-                      ei.local_pubkey
+                      ei.local_pubkey,
+                      ei.last_index_offset
                   FROM etl_invoices ei
                     LEFT OUTER JOIN invoices
                       ON ei.r_hash = invoices.r_hash
