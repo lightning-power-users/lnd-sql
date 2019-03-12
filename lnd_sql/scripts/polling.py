@@ -41,7 +41,12 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-
+    invoices = UpsertInvoices(
+        tls_cert_path=args.tls,
+        lnd_grpc_host=args.host,
+        lnd_grpc_port=args.port,
+        macaroon_path=args.macaroon
+    )
     while True:
         try:
             # UpsertOpenChannels(
@@ -52,12 +57,7 @@ if __name__ == '__main__':
             # )
             # log.debug('polling update')
 
-            UpsertInvoices(
-                tls_cert_path=args.tls,
-                lnd_grpc_host=args.host,
-                lnd_grpc_port=args.port,
-                macaroon_path=args.macaroon
-            ).upsert_all()
+            invoices.upsert_all()
             log.debug('polling update')
 
             # fwd_events = UpsertForwardingEvents(

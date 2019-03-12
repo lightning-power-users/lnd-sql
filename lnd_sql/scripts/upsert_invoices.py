@@ -48,10 +48,13 @@ class UpsertInvoices(object):
             num_max_invoices=100000,
             index_offset=self.get_index_offset()
         )
-        self.upsert(invoice_list=invoices.invoices,
+        self.upsert(invoice_list=list(invoices.invoices),
                     last_index_offset=invoices.last_index_offset)
 
-    def upsert(self, invoice_list, last_index_offset=None):
+    def upsert(self, invoice=None, invoice_list=None, last_index_offset=None):
+        if invoice_list is None:
+            invoice_list = [invoice]
+
         csv_file = StringIO()
         writer = csv.DictWriter(csv_file,
                                 fieldnames=ETLInvoices.csv_columns)
