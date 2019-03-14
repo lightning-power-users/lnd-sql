@@ -59,6 +59,8 @@ if __name__ == '__main__':
 
             invoices.upsert_all()
             log.debug('polling update')
+            time.sleep(30)
+
 
             # fwd_events = UpsertForwardingEvents(
             #     tls_cert_path=args.tls,
@@ -68,4 +70,4 @@ if __name__ == '__main__':
             # )
         except _Rendezvous:
             log.error('polling error', exc_info=True)
-            time.sleep(1)
+            time.sleep(30)

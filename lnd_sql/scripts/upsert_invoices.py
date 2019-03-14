@@ -30,11 +30,20 @@ class UpsertInvoices(object):
         self.lnd_grpc_port = lnd_grpc_port
 
     @staticmethod
-    def get_index_offset() -> int:
+    def get_last_index_offset() -> int:
         with session_scope() as session:
             record = (
                 session
                     .query(func.max(Invoices.last_index_offset)).scalar()
+            )
+            return record
+
+    @staticmethod
+    def get_max_add_index() -> int:
+        with session_scope() as session:
+            record = (
+                session
+                    .query(func.max(Invoices.add_index)).scalar()
             )
             return record
 
@@ -52,7 +61,7 @@ class UpsertInvoices(object):
     def upsert_all(self):
         invoices: ListInvoiceResponse = self.rpc.list_invoices(
             num_max_invoices=100000,
-            index_offset=self.get_index_offset()
+            index_offset=self.get_last_index_offset()
         )
         info: GetInfoResponse = self.rpc.get_info()
 
