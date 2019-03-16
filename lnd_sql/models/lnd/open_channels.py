@@ -30,8 +30,8 @@ class OpenChannels(Base):
 
     chan_id = Column(BIGINT)
     active = Column(Boolean)
-    local_pubkey = Column(String, ForeignKey(Peers.pubkey))
-    remote_pubkey = Column(String, ForeignKey(Peers.pubkey))
+    local_pubkey = Column(String)
+    remote_pubkey = Column(String)
     channel_point = Column(String)
     capacity = Column(BIGINT)
     local_balance = Column(BIGINT)

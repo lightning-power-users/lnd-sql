@@ -1,4 +1,6 @@
 from sqlalchemy import (
+    BIGINT,
+    Boolean,
     Column,
     DateTime,
     func,
@@ -23,4 +25,13 @@ class Peers(Base):
     deleted_at = Column(DateTime(timezone=True),
                         nullable=True)
 
-    pubkey = Column(String, primary_key=True)
+    id = Column(BIGINT, primary_key=True)
+    remote_pubkey = Column(String)
+    local_pubkey = Column(String)
+    address = Column(String)
+    bytes_sent = Column(BIGINT)
+    bytes_recv = Column(BIGINT)
+    sat_sent = Column(BIGINT)
+    sat_recv = Column(BIGINT)
+    inbound = Column(Boolean)
+    ping_time = Column(BIGINT)

@@ -9,25 +9,16 @@ import pytz
 from sqlalchemy import func
 
 from lnd_grpc.lnd_grpc import Client
-from lnd_grpc.protos.rpc_pb2 import GetInfoResponse, ListInvoiceResponse
+from lnd_grpc.protos.rpc_pb2 import ListInvoiceResponse
 from lnd_sql.database.session import session_scope
 from lnd_sql.models import Invoices
 from lnd_sql.models.lnd.etl.etl_invoices import ETLInvoices
 
 
 class UpsertInvoices(object):
-    _rpc: Client
-
-    def __init__(self,
-                 tls_cert_path: str = None,
-                 macaroon_path: str = None,
-                 lnd_grpc_host: str = '127.0.0.1',
-                 lnd_grpc_port: str = '10009'):
-        self._rpc = None
-        self.tls_cert_path = tls_cert_path
-        self.macaroon_path = macaroon_path
-        self.lnd_grpc_host = lnd_grpc_host
-        self.lnd_grpc_port = lnd_grpc_port
+    def __init__(self, rpc: Client, local_pubkey: str):
+        self.rpc = rpc
+        self.local_pubkey = local_pubkey
 
     @staticmethod
     def get_last_index_offset() -> int:
@@ -47,27 +38,15 @@ class UpsertInvoices(object):
             )
             return record
 
-    @property
-    def rpc(self) -> Client:
-        if self._rpc is None:
-            self._rpc = Client(
-                tls_cert_path=self.tls_cert_path,
-                macaroon_path=self.macaroon_path,
-                grpc_host=self.lnd_grpc_host,
-                grpc_port=self.lnd_grpc_port,
-            )
-        return self._rpc
-
     def upsert_all(self):
         invoices: ListInvoiceResponse = self.rpc.list_invoices(
             num_max_invoices=100000,
             index_offset=self.get_last_index_offset()
         )
-        info: GetInfoResponse = self.rpc.get_info()
 
         self.upsert(invoice_list=list(invoices.invoices),
                     last_index_offset=invoices.last_index_offset,
-                    local_pubkey=info.identity_pubkey)
+                    local_pubkey=self.local_pubkey)
 
     @staticmethod
     def upsert(single_invoice=None, invoice_list=None,

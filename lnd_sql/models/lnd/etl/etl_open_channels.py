@@ -46,18 +46,18 @@ class ETLOpenChannels(Base):
         # Insert any missing peers to avoid having a foreign key missing
         with session_scope() as session:
             session.execute("""
-            INSERT INTO peers (pubkey) 
-            SELECT DISTINCT remote_pubkey
-              FROM etl_open_channels
+            INSERT INTO peers (remote_pubkey) 
+            SELECT DISTINCT eoc.remote_pubkey
+              FROM etl_open_channels eoc
               LEFT OUTER JOIN peers
-                ON etl_open_channels.remote_pubkey = peers.pubkey
-              WHERE peers.pubkey IS NULL
+                ON eoc.remote_pubkey = peers.remote_pubkey
+              WHERE peers.id IS NULL
             UNION
-            SELECT DISTINCT local_pubkey
-            FROM etl_open_channels
+            SELECT DISTINCT eoc.local_pubkey
+            FROM etl_open_channels eoc
               LEFT OUTER JOIN peers
-                ON etl_open_channels.local_pubkey = peers.pubkey
-              WHERE peers.pubkey IS NULL;
+                ON eoc.local_pubkey = peers.remote_pubkey
+              WHERE peers.id IS NULL;
             """)
 
         with session_scope() as session:

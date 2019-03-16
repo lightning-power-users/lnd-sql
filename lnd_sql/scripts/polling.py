@@ -2,12 +2,16 @@ import time
 
 from grpc._channel import _Rendezvous
 
+from lnd_grpc.lnd_grpc import Client
+from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.logger import log
 from lnd_sql.scripts.upsert_forwarding_events import UpsertForwardingEvents
 from lnd_sql.scripts.upsert_invoices import UpsertInvoices
 from lnd_sql.scripts.upsert_open_channels import UpsertOpenChannels
 
 import argparse
+
+from lnd_sql.scripts.upsert_peers import UpsertPeers
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -41,33 +45,29 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    invoices = UpsertInvoices(
+
+    rpc = Client(
         tls_cert_path=args.tls,
-        lnd_grpc_host=args.host,
-        lnd_grpc_port=args.port,
+        grpc_host=args.host,
+        grpc_port=args.port,
         macaroon_path=args.macaroon
     )
+
+    info: GetInfoResponse = rpc.get_info()
+    local_pubkey = info.identity_pubkey
+
+    forwarding_events = UpsertForwardingEvents(rpc=rpc, local_pubkey=local_pubkey)
+    invoices = UpsertInvoices(rpc=rpc, local_pubkey=local_pubkey)
+    open_channels = UpsertOpenChannels(rpc=rpc, local_pubkey=local_pubkey)
+    peers = UpsertPeers(rpc=rpc, local_pubkey=local_pubkey)
     while True:
         try:
-            # UpsertOpenChannels(
-            #     tls_cert_path=args.tls,
-            #     lnd_grpc_host=args.host,
-            #     lnd_grpc_port=args.port,
-            #     macaroon_path=args.macaroon
-            # )
-            # log.debug('polling update')
-
-            invoices.upsert_all()
             log.debug('polling update')
+            # forwarding_events.upsert_all()
+            invoices.upsert_all()
+            open_channels.upsert_all()
+            peers.upsert_all()
             time.sleep(30)
-
-
-            # fwd_events = UpsertForwardingEvents(
-            #     tls_cert_path=args.tls,
-            #     lnd_grpc_host=args.host,
-            #     lnd_grpc_port=args.port,
-            #     macaroon_path=args.macaroon
-            # )
         except _Rendezvous:
             log.error('polling error', exc_info=True)
             time.sleep(30)
