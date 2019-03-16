@@ -5,9 +5,7 @@ from sqlalchemy import (
     func,
     String
 )
-from sqlalchemy.orm import Session
 
-from lnd_sql.database.session import session_scope
 from lnd_sql.database.base import Base
 
 
@@ -35,9 +33,3 @@ class ForwardingEvents(Base):
     fee = Column(BIGINT)
     fee_msat = Column(BIGINT)
     last_offset_index = Column(BIGINT)
-
-
-if __name__ == '__main__':
-    session: Session = None
-    with session_scope() as session:
-        Base.metadata.create_all(session.get_bind())

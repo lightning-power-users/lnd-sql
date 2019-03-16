@@ -44,17 +44,6 @@ class ETLInvoices(Base):
 
     @classmethod
     def load(cls):
-        # Insert any missing peers to avoid having a foreign key missing
-        with session_scope() as session:
-            session.execute("""
-            INSERT INTO peers (remote_pubkey) 
-            SELECT DISTINCT etl_invoices.local_pubkey
-            FROM etl_invoices
-              LEFT OUTER JOIN peers
-                ON etl_invoices.local_pubkey = peers.local_pubkey
-              WHERE peers.remote_pubkey IS NULL;
-            """)
-
         with session_scope() as session:
             session.execute("""
         UPDATE invoices

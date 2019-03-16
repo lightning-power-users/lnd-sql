@@ -10,8 +10,8 @@ from sqlalchemy import (
 from lnd_sql.database.base import Base
 
 
-class Peers(Base):
-    __tablename__ = 'peers'
+class ActivePeers(Base):
+    __tablename__ = 'active_peers'
 
     created_at = Column(DateTime(timezone=True),
                         nullable=False,

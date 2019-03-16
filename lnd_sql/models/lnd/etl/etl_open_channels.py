@@ -43,23 +43,6 @@ class ETLOpenChannels(Base):
 
     @classmethod
     def load(cls):
-        # Insert any missing peers to avoid having a foreign key missing
-        with session_scope() as session:
-            session.execute("""
-            INSERT INTO peers (remote_pubkey) 
-            SELECT DISTINCT eoc.remote_pubkey
-              FROM etl_open_channels eoc
-              LEFT OUTER JOIN peers
-                ON eoc.remote_pubkey = peers.remote_pubkey
-              WHERE peers.id IS NULL
-            UNION
-            SELECT DISTINCT eoc.local_pubkey
-            FROM etl_open_channels eoc
-              LEFT OUTER JOIN peers
-                ON eoc.local_pubkey = peers.remote_pubkey
-              WHERE peers.id IS NULL;
-            """)
-
         with session_scope() as session:
             session.execute("""
         UPDATE open_channels

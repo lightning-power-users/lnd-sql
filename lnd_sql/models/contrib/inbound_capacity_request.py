@@ -45,3 +45,5 @@ class InboundCapacityRequest(Base):
     expected_bytes = Column(BIGINT)
     transaction_fee = Column(BIGINT)
     total_fee = Column(BIGINT)
+
+    keep_open_until = Column(DateTime(timezone=True))
