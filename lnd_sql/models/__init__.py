@@ -1,3 +1,5 @@
+from .bitcoind.etl.etl_smart_fee_estimates import ETLSmartFeeEstimates
+from .bitcoind.smart_fee_estimates import SmartFeeEstimates
 from .contrib.inbound_capacity_request import InboundCapacityRequest
 from .lnd.active_peers import ActivePeers
 from .lnd.etl.etl_active_peers import ETLActivePeers
