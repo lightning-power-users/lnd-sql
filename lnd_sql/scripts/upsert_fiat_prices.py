@@ -63,7 +63,7 @@ def cache_usd_price():
             .first()
         )
         if latest_price is not None:
-            one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+            one_hour_ago = datetime.utcnow().replace(tzinfo=pytz.utc) - timedelta(hours=1)
             if latest_price.timestamp > one_hour_ago:
                 return
     response = BitcoinAverage().get_ticker()
