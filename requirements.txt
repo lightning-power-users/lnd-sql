@@ -7,6 +7,7 @@ jupyter
 keyring
 pandas
 psycopg2-binary
+requests
 sqlalchemy
 sqlalchemy-postgres-copy
 structlog

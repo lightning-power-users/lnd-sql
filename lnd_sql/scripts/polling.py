@@ -5,6 +5,7 @@ from grpc._channel import _Rendezvous
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.logger import log
+from lnd_sql.scripts.upsert_fiat_prices import cache_usd_price
 from lnd_sql.scripts.upsert_forwarding_events import UpsertForwardingEvents
 from lnd_sql.scripts.upsert_invoices import UpsertInvoices
 from lnd_sql.scripts.upsert_open_channels import UpsertOpenChannels
@@ -68,6 +69,7 @@ if __name__ == '__main__':
         try:
             log.debug('polling update')
             # forwarding_events.upsert_all()
+            cache_usd_price()
             invoices.upsert_all()
             open_channels.upsert_all()
             peers.upsert_all()
