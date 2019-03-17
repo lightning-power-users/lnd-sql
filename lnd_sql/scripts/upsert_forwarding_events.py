@@ -7,49 +7,32 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.elements import and_
 
 from lnd_grpc.lnd_grpc import Client
-from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.database.session import session_scope
 from lnd_sql.logger import log
-from lnd_sql.models.forwarding_events import ForwardingEvents
+from lnd_sql.models.lnd import ForwardingEvents
 
 
 class UpsertForwardingEvents(object):
-    rpc: Client
-
-    def __init__(self,
-                 tls_cert_path: str = None,
-                 macaroon_path: str = None,
-                 lnd_network: str = 'mainnet',
-                 lnd_grpc_host: str = '127.0.0.1',
-                 lnd_grpc_port: str = '10009'):
-        self.rpc = Client(
-            tls_cert_path=tls_cert_path,
-            macaroon_path=macaroon_path,
-            network=lnd_network,
-            grpc_host=lnd_grpc_host,
-            grpc_port=lnd_grpc_port,
-        )
-        self.info: GetInfoResponse = self.rpc.get_info()
+    def __init__(self, rpc: Client, local_pubkey: str):
+        self.rpc = rpc
+        self.local_pubkey = local_pubkey
 
     @staticmethod
-    def get_index_offset() -> int:
+    def get_last_offset_index() -> int:
         with session_scope() as session:
-            try:
-                record = (
-                    session
-                    .query(func.max(ForwardingEvents.last_offset_index))
-                    .one()
-                )
-                return record
-            except NoResultFound:
-                return 0
+            record = (
+                session
+                .query(func.max(ForwardingEvents.last_offset_index))
+                .scalar()
+            )
+            return record
 
     def upsert_all(self):
         forwarding_events = self.rpc.forwarding_history(
             start_time=1,
             end_time=int(datetime.now().timestamp()),
             num_max_events=10000,
-            index_offset=self.get_index_offset()
+            index_offset=self.get_last_offset_index()
         )
         log.debug(
             'forwarding_events',
@@ -62,7 +45,7 @@ class UpsertForwardingEvents(object):
                 {'last_offset_index': forwarding_events.last_offset_index}
             )
         for forwarding_event_dict in forwarding_event_dicts:
-            self.upsert(self.info.identity_pubkey, forwarding_event_dict)
+            self.upsert(self.local_pubkey, forwarding_event_dict)
 
     @staticmethod
     def upsert(local_pubkey, data: dict):
