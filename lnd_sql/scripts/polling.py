@@ -12,6 +12,7 @@ from lnd_sql.scripts.upsert_open_channels import UpsertOpenChannels
 import argparse
 
 from lnd_sql.scripts.upsert_peers import UpsertPeers
+from lnd_sql.scripts.upsert_pending_channels import UpsertPendingChannels
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -60,13 +61,15 @@ if __name__ == '__main__':
     invoices = UpsertInvoices(rpc=rpc, local_pubkey=local_pubkey)
     open_channels = UpsertOpenChannels(rpc=rpc, local_pubkey=local_pubkey)
     peers = UpsertPeers(rpc=rpc, local_pubkey=local_pubkey)
+    pending_channels = UpsertPendingChannels(rpc=rpc, local_pubkey=local_pubkey)
     while True:
         try:
             log.debug('polling update')
             # forwarding_events.upsert_all()
-            invoices.upsert_all()
-            open_channels.upsert_all()
-            peers.upsert_all()
+            # invoices.upsert_all()
+            # open_channels.upsert_all()
+            # peers.upsert_all()
+            pending_channels.upsert_all()
             time.sleep(30)
         except _Rendezvous:
             log.error('polling error', exc_info=True)
