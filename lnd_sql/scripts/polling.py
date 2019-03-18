@@ -82,6 +82,6 @@ if __name__ == '__main__':
             pending_channels.upsert_all()
             smart_fee_estimates.upsert_all()
             time.sleep(30)
-        except _Rendezvous:
+        except:
             log.error('polling error', exc_info=True)
             time.sleep(30)
