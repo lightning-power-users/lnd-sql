@@ -11,10 +11,14 @@ from lnd_sql.models import ETLSmartFeeEstimates
 
 
 class UpsertSmartFeeEstimates(object):
-    @staticmethod
-    def estimate_smart_fee(conf_target, mode):
+
+    def __init__(self, btc_conf_file: None):
+        self.btc_conf_file = btc_conf_file
+
+    def estimate_smart_fee(self, conf_target, mode):
         # noinspection PyProtectedMember
-        r = Proxy()._call('estimatesmartfee', conf_target, mode)
+        r = Proxy(btc_conf_file=self.btc_conf_file)._call('estimatesmartfee',
+                                                          conf_target, mode)
         return r
 
     def upsert_all(self):

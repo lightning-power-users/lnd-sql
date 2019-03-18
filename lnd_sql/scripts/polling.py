@@ -47,6 +47,12 @@ if __name__ == '__main__':
         default='127.0.0.1'
     )
 
+    parser.add_argument(
+        '--btc_conf_file',
+        type=str,
+        help='bitcoind config file',
+    )
+
     args = parser.parse_args()
 
     rpc = Client(
@@ -64,7 +70,7 @@ if __name__ == '__main__':
     open_channels = UpsertOpenChannels(rpc=rpc, local_pubkey=local_pubkey)
     peers = UpsertPeers(rpc=rpc, local_pubkey=local_pubkey)
     pending_channels = UpsertPendingChannels(rpc=rpc, local_pubkey=local_pubkey)
-    smart_fee_estimates = UpsertSmartFeeEstimates()
+    smart_fee_estimates = UpsertSmartFeeEstimates(btc_conf_file=args.btc_conf_file)
     while True:
         try:
             log.debug('polling update')

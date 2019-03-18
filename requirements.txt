@@ -7,6 +7,7 @@ jupyter
 keyring
 pandas
 psycopg2-binary
+python-bitcoinlib
 requests
 sqlalchemy
 sqlalchemy-postgres-copy
