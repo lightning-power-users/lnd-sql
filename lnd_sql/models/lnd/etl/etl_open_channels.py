@@ -12,7 +12,8 @@ class ETLOpenChannels(Base):
                    'capacity', 'local_balance', 'remote_balance',
                    'commit_fee', 'commit_weight', 'fee_per_kw',
                    'total_satoshis_sent', 'total_satoshis_received',
-                   'num_updates', 'csv_delay', 'private', 'unsettled_balance')
+                   'num_updates', 'csv_delay', 'private', 'unsettled_balance',
+                   'initiator')
 
     id = Column(BIGINT, primary_key=True)
 
@@ -33,6 +34,7 @@ class ETLOpenChannels(Base):
     csv_delay = Column(BIGINT)
     unsettled_balance = Column(BIGINT)
     private = Column(Boolean)
+    initiator = Column(Boolean)
 
     @classmethod
     def truncate(cls):
@@ -59,7 +61,8 @@ class ETLOpenChannels(Base):
           remote_balance          = etl_open_channels.remote_balance,
           total_satoshis_received = etl_open_channels.total_satoshis_received,
           total_satoshis_sent     = etl_open_channels.total_satoshis_sent,
-          unsettled_balance       = etl_open_channels.unsettled_balance
+          unsettled_balance       = etl_open_channels.unsettled_balance,
+          initiator               = etl_open_channels.initiator
         FROM etl_open_channels
         WHERE etl_open_channels.chan_id = open_channels.chan_id
           AND etl_open_channels.local_pubkey = open_channels.local_pubkey;
@@ -84,7 +87,8 @@ class ETLOpenChannels(Base):
                   remote_pubkey,
                   total_satoshis_received,
                   total_satoshis_sent,
-                  unsettled_balance
+                  unsettled_balance,
+                  initiator
                   )
                   SELECT
                       eoc.active,
@@ -103,7 +107,8 @@ class ETLOpenChannels(Base):
                       eoc.remote_pubkey,
                       eoc.total_satoshis_received,
                       eoc.total_satoshis_sent,
-                      eoc.unsettled_balance
+                      eoc.unsettled_balance,
+                      eoc.initiator
                   FROM etl_open_channels eoc
                     LEFT OUTER JOIN open_channels
                       ON eoc.chan_id = open_channels.chan_id

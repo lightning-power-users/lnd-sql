@@ -44,3 +44,4 @@ class OpenChannels(Base):
     csv_delay = Column(BIGINT)
     private = Column(Boolean)
     unsettled_balance = Column(BIGINT)
+    initiator = Column(Boolean)
