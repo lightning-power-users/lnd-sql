@@ -75,6 +75,7 @@ class UpsertInvoices(object):
             invoice_dict.pop('route_hints', None)
             invoice_dict.pop('amt_paid', None)
             invoice_dict.pop('amt_paid_msat', None)
+            invoice_dict.pop('state', None)
             writer.writerow(invoice_dict)
         ETLInvoices.truncate()
         flags = {'format': 'csv', 'header': False}
