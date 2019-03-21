@@ -47,3 +47,4 @@ class InboundCapacityRequest(Base):
     total_fee = Column(BIGINT)
 
     keep_open_until = Column(DateTime(timezone=True))
+    status = Column(String)
