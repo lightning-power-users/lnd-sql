@@ -5,6 +5,7 @@ from grpc._channel import _Rendezvous
 from lnd_grpc.lnd_grpc import Client
 from lnd_grpc.protos.rpc_pb2 import GetInfoResponse
 from lnd_sql.logger import log
+from lnd_sql.scripts.upsert_channel_graph import UpsertChannelGraph
 from lnd_sql.scripts.upsert_fiat_prices import cache_usd_price
 from lnd_sql.scripts.upsert_forwarding_events import UpsertForwardingEvents
 from lnd_sql.scripts.upsert_invoices import UpsertInvoices
@@ -65,6 +66,7 @@ if __name__ == '__main__':
     info: GetInfoResponse = rpc.get_info()
     local_pubkey = info.identity_pubkey
 
+    channel_graph = UpsertChannelGraph(rpc=rpc)
     forwarding_events = UpsertForwardingEvents(rpc=rpc, local_pubkey=local_pubkey)
     invoices = UpsertInvoices(rpc=rpc, local_pubkey=local_pubkey)
     open_channels = UpsertOpenChannels(rpc=rpc, local_pubkey=local_pubkey)
@@ -73,7 +75,8 @@ if __name__ == '__main__':
     smart_fee_estimates = UpsertSmartFeeEstimates(btc_conf_file=args.btc_conf_file)
     while True:
         try:
-            log.debug('polling update')
+            log.debug('polling update starting')
+            channel_graph.upsert_all()
             # forwarding_events.upsert_all()
             cache_usd_price()
             invoices.upsert_all()
@@ -81,6 +84,7 @@ if __name__ == '__main__':
             peers.upsert_all()
             pending_channels.upsert_all()
             smart_fee_estimates.upsert_all()
+            log.debug('polling update finished')
             time.sleep(30)
         except:
             log.error('polling error', exc_info=True)
