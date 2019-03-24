@@ -35,6 +35,15 @@ class ETLChannelEdges(Base):
     def load(cls):
         with session_scope() as session:
             session.execute("""
+        UPDATE channel_edges
+        SET
+            last_update = ece.last_update
+        FROM etl_channel_edges ece
+        WHERE ece.channel_id = channel_edges.channel_id;
+            """)
+
+        with session_scope() as session:
+            session.execute("""
             INSERT INTO channel_edges (
                   channel_id,
                   last_update,

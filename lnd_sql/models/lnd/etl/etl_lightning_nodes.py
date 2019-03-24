@@ -9,7 +9,6 @@ from lnd_sql.database.base import Base
 
 
 class ETLLightningNodes(Base):
-
     csv_columns = ('last_update', 'pubkey', 'alias', 'color')
 
     __tablename__ = 'etl_lightning_nodes'
@@ -30,6 +29,17 @@ class ETLLightningNodes(Base):
 
     @classmethod
     def load(cls):
+        with session_scope() as session:
+            session.execute("""
+        UPDATE lightning_nodes
+        SET
+            last_update = eln.last_update,
+            alias       = eln.alias,
+            color       = eln.color
+        FROM etl_lightning_nodes eln
+        WHERE eln.pubkey = lightning_nodes.pubkey;
+            """)
+
         with session_scope() as session:
             session.execute("""
             INSERT INTO lightning_nodes (

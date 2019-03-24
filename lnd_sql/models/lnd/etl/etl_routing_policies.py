@@ -39,6 +39,22 @@ class ETLRoutingPolicies(Base):
     def load(cls):
         with session_scope() as session:
             session.execute("""
+        UPDATE routing_policies
+        SET
+            last_update         = erp.last_update,
+            time_lock_delta     = erp.time_lock_delta,
+            min_htlc            = erp.min_htlc,
+            fee_base_msat       = erp.fee_base_msat,
+            fee_rate_milli_msat = erp.fee_rate_milli_msat,
+            disabled            = erp.disabled,
+            max_htlc_msat       = erp.max_htlc_msat
+        FROM etl_routing_policies erp
+        WHERE erp.channel_id = routing_policies.channel_id
+          AND erp.pubkey = routing_policies.pubkey;
+            """)
+
+        with session_scope() as session:
+            session.execute("""
             INSERT INTO routing_policies (
                   pubkey,
                   last_update,
