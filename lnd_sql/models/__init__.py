@@ -4,6 +4,7 @@ from .contrib.exchange_rates import ExchangeRates
 from .contrib.inbound_capacity_request import InboundCapacityRequest
 from .lnd.active_peers import ActivePeers
 from .lnd.etl.etl_active_peers import ETLActivePeers
+from .lnd.etl.etl_forwarding_events import ETLForwardingEvents
 from .lnd.etl.etl_invoices import ETLInvoices
 from .lnd.etl.etl_lightning_addresses import ETLLightningAddresses
 from .lnd.etl.etl_open_channels import ETLOpenChannels

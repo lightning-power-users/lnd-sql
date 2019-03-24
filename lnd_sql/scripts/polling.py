@@ -77,7 +77,7 @@ if __name__ == '__main__':
         try:
             log.debug('polling update starting')
             channel_graph.upsert_all()
-            # forwarding_events.upsert_all()
+            forwarding_events.upsert_all()
             cache_usd_price()
             invoices.upsert_all()
             open_channels.upsert_all()
