@@ -27,7 +27,7 @@ class OpenChannels(Base):
 
     id = Column(BIGINT, primary_key=True)
 
-    chan_id = Column(BIGINT, unique=True, nullable=False)
+    chan_id = Column(BIGINT)
     active = Column(Boolean)
     local_pubkey = Column(String)
     remote_pubkey = Column(String)
