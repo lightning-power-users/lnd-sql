@@ -1,4 +1,5 @@
-SELECT ln.alias,
+CREATE VIEW open_peers AS
+  SELECT ln.alias,
        open_peers.*,
        open_peers.our_capacity - open_peers.local_balance - open_peers.remote_balance - open_peers.commit_fee - open_peers.unsettled_balance AS capacity_rec,
        open_peers_channels.total_channel_count,
@@ -41,12 +42,5 @@ LEFT JOIN
 LEFT OUTER JOIN lightning_nodes ln
 ON ln.pubkey = open_peers.remote_pubkey
 
-LEFT JOIN
-(
-  SELECT pubkey
-  SELECT * FROM (
-                SELECT channel_id_
-                  ) t2
-  ) t
-ON t.pubkey = open_peers.remote_pubkey
+
 ORDER BY open_peers.our_chan_count DESC, open_peers.our_capacity DESC, open_peers_channels.total_channel_capacity DESC;
