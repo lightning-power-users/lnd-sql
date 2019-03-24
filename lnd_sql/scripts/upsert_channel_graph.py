@@ -10,7 +10,7 @@ import postgres_copy
 from lnd_grpc.lnd_grpc import Client
 from lnd_sql.database.session import session_scope
 from lnd_sql.models import ETLLightningAddresses, ETLLightningNodes, \
-    ETLChannelEdges
+    ETLChannelEdges, ETLRoutingPolicies
 
 
 class UpsertChannelGraph(object):
@@ -74,14 +74,20 @@ class UpsertChannelGraph(object):
     def upsert_channel_edges(channel_graph):
         channel_edge_csv_file = StringIO()
         channel_edge_writer = csv.DictWriter(channel_edge_csv_file,
-                                fieldnames=ETLChannelEdges.csv_columns)
+                                             fieldnames=ETLChannelEdges.csv_columns)
+        policy_csv_file = StringIO()
+        policy_writer = csv.DictWriter(policy_csv_file,
+                                       fieldnames=ETLRoutingPolicies.csv_columns)
         for channel_edge in channel_graph.edges:
             data: dict = MessageToDict(channel_edge)
             node1_policy = data.pop('node1_policy', None)
             node2_policy = data.pop('node2_policy', None)
-            for policy in [node1_policy, node2_policy]:
+            for index, policy in enumerate([node1_policy, node2_policy]):
                 if policy is None:
                     continue
+                policy['pubkey'] = data[f'node{index+1}_pub']
+                policy['channel_id'] = data['channel_id']
+                policy_writer.writerow(policy)
 
             data['node1_pubkey'] = data.pop('node1_pub')
             data['node2_pubkey'] = data.pop('node2_pub')
@@ -100,29 +106,15 @@ class UpsertChannelGraph(object):
                                     **flags)
         ETLChannelEdges.load()
         ETLChannelEdges.truncate()
-    #
-    #
-    # @staticmethod
-    # def upsert_routing_policies(channel_graph):
-    #     csv_file = StringIO()
-    #     writer = csv.DictWriter(csv_file,
-    #                             fieldnames=ETLRoutingPolicies.csv_columns)
-    #     for node in channel_graph.nodes:
-    #         data: dict = MessageToDict(node)
-    #         data.pop('addresses')
-    #         data['pubkey'] = node.pub_key
-    #
-    #         data['last_update'] = datetime.utcfromtimestamp(
-    #             node.last_update).replace(tzinfo=pytz.utc)
-    #         writer.writerow(data)
-    #     ETLRoutingPolicies.truncate()
-    #     flags = {'format': 'csv', 'header': False}
-    #     with session_scope() as session:
-    #         csv_file.seek(0)
-    #         postgres_copy.copy_from(csv_file,
-    #                                 ETLRoutingPolicies,
-    #                                 session.connection(),
-    #                                 ETLRoutingPolicies.csv_columns,
-    #                                 **flags)
-    #     ETLRoutingPolicies.load()
-    #     ETLRoutingPolicies.truncate()
+
+        ETLRoutingPolicies.truncate()
+        flags = {'format': 'csv', 'header': False}
+        with session_scope() as session:
+            policy_csv_file.seek(0)
+            postgres_copy.copy_from(policy_csv_file,
+                                    ETLRoutingPolicies,
+                                    session.connection(),
+                                    ETLRoutingPolicies.csv_columns,
+                                    **flags)
+        ETLRoutingPolicies.load()
+        ETLRoutingPolicies.truncate()
