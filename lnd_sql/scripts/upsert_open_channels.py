@@ -27,6 +27,12 @@ class UpsertOpenChannels(object):
         for channel_dict in channel_dicts:
             channel_dict['local_pubkey'] = info.identity_pubkey
             channel_dict.pop('pending_htlcs', None)
+            channel_dict['capacity'] = channel_dict.get('capacity', 0)
+            channel_dict['local_balance'] = channel_dict.get('local_balance', 0)
+            channel_dict['remote_balance'] = channel_dict.get('remote_balance', 0)
+            channel_dict['total_satoshis_sent'] = channel_dict.get('total_satoshis_sent', 0)
+            channel_dict['total_satoshis_received'] = channel_dict.get('total_satoshis_received', 0)
+            channel_dict['unsettled_balance'] = channel_dict.get('unsettled_balance', 0)
             writer.writerow(channel_dict)
         ETLOpenChannels.truncate()
         flags = {'format': 'csv', 'header': False}
