@@ -80,20 +80,23 @@ class UpsertChannelGraph(object):
                                        fieldnames=ETLRoutingPolicies.csv_columns)
         for channel_edge in channel_graph.edges:
             data: dict = MessageToDict(channel_edge)
-            node1_policy = data.pop('node1_policy', None)
-            node2_policy = data.pop('node2_policy', None)
-            for index, policy in enumerate([node1_policy, node2_policy]):
-                if policy is None:
-                    continue
-                policy['pubkey'] = data[f'node{index+1}_pub']
-                policy['channel_id'] = data['channel_id']
-                policy_writer.writerow(policy)
 
             data['node1_pubkey'] = data.pop('node1_pub')
             data['node2_pubkey'] = data.pop('node2_pub')
 
             data['last_update'] = datetime.utcfromtimestamp(
                 channel_edge.last_update).replace(tzinfo=pytz.utc)
+
+            node1_policy = data.pop('node1_policy', None)
+            node2_policy = data.pop('node2_policy', None)
+
+            for index, policy in enumerate([node1_policy, node2_policy]):
+                if policy is None:
+                    continue
+                policy['pubkey'] = data[f'node{index+1}_pubkey']
+                policy['channel_id'] = data['channel_id']
+                policy['last_update'] = data['last_update']
+                policy_writer.writerow(policy)
             channel_edge_writer.writerow(data)
         ETLChannelEdges.truncate()
         flags = {'format': 'csv', 'header': False}
