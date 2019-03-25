@@ -1,19 +1,21 @@
+DROP VIEW open_peers;
 CREATE VIEW open_peers AS
   SELECT ln.alias,
        open_peers.*,
        open_peers.our_capacity - open_peers.local_balance - open_peers.remote_balance - open_peers.commit_fee - open_peers.unsettled_balance AS capacity_rec,
        open_peers_channels.total_channel_count,
        open_peers_channels.total_channel_capacity,
-       round(open_peers.our_capacity / open_peers_channels.total_channel_capacity*100) as percent_ours
+       round(open_peers.our_capacity / open_peers_channels.total_channel_capacity*100) as network_capacity_percent
   FROM
 (SELECT
        remote_pubkey,
        count(chan_id) AS our_chan_count,
        sum(capacity) AS our_capacity,
-       coalesce(sum(local_balance), 0) AS local_balance,
-       coalesce(sum(remote_balance), 0) AS remote_balance,
-       coalesce(sum(commit_fee), 0) AS commit_fee,
-       coalesce(sum(unsettled_balance), 0) AS unsettled_balance
+       sum(local_balance) AS local_balance,
+       sum(remote_balance) AS remote_balance,
+       sum(commit_fee) AS commit_fee,
+       sum(unsettled_balance) AS unsettled_balance,
+       round(sum(local_balance) / sum(capacity)*100) AS percent_ours
 FROM open_channels
 GROUP BY remote_pubkey) open_peers
 LEFT JOIN
